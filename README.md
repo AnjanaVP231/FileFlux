@@ -35,9 +35,5 @@ Since everything runs in the browser, getting started is extremely simple:
    ```bash
    cd FileFlux
    ```
-3. Open `index.html` in your favorite web browser!
+3. Open `index.html` in web browser!
 
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! 
-Feel free to check [issues page](https://github.com/AnjanaVP231/FileFlux/issues).
