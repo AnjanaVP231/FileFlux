@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileFlux | Flow Between Formats</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Set worker path for PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="container">
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-layer-group"></i>
+                <h1>FileFlux</h1>
+            </div>
+            <p class="tagline">Flow Between Formats.</p>
+        </header>
+
+        <div class="app-card glass-panel">
+            <!-- Alert Container -->
+            <div id="alert-container" class="alert-container hidden">
+                <p id="alert-message"></p>
+                <button id="close-alert"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Upload Section -->
+            <section id="upload-section" class="upload-area">
+                <input type="file" id="file-input" accept="image/jpeg, image/png, application/pdf" hidden>
+                <div class="upload-content" id="drop-zone">
+                    <div class="upload-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h3>Drag & Drop your file here</h3>
+                    <p>or</p>
+                    <button class="btn btn-primary" id="browse-btn">Browse Files</button>
+                    <p class="file-limits">Supports JPG, PNG, PDF (Max 20MB)</p>
+                </div>
+            </section>
+
+            <!-- Workspace Section (Hidden Initially) -->
+            <section id="workspace-section" class="workspace hidden">
+                <div class="workspace-grid">
+                    
+                    <!-- Left Column: Preview -->
+                    <div class="preview-panel">
+                        <div class="file-info">
+                            <h4 id="file-name" class="text-truncate">filename.jpg</h4>
+                            <span id="file-original-size" class="badge">0 KB</span>
+                            <button id="remove-file-btn" class="btn-icon" title="Remove file">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                        <div class="preview-container" id="preview-container">
+                            <img id="image-preview" class="hidden" alt="File Preview">
+                            <canvas id="pdf-preview" class="hidden"></canvas>
+                            <div id="preview-placeholder" class="preview-placeholder">
+                                <i class="fa-solid fa-file-image"></i>
+                                <p>Generating Preview...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Settings & Actions -->
+                    <div class="settings-panel">
+                        <div class="settings-group">
+                            <label for="output-format">Convert To:</label>
+                            <div class="custom-select">
+                                <select id="output-format">
+                                    <option value="" disabled selected>Select Format</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-group compression-group">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="compress-toggle">
+                                <label for="compress-toggle" class="toggle-label">Enable Compression</label>
+                            </div>
+
+                            <div id="compression-options" class="compression-settings hidden">
+                                <label>Quality Level:</label>
+                                <div class="quality-selector">
+                                    <label class="quality-option">
+                                        <input type="radio" name="quality" value="High" checked>
+                                        <span>High</span>
+                                    </label>
+                                    <label class="quality-option">
+                                        <input type="radio" name="quality" value="Medium">
+                                        <span>Med</span>
+                                    </label>
+                                    <label class="quality-option">
+                                        <input type="radio" name="quality" value="Low">
+                                        <span>Low</span>
+                                    </label>
+                                </div>
+                                <p class="hint">Adjusts file quality to reduce size.</p>
+
+                                <div class="dimensions-settings">
+                                    <label>Resize Dimensions (Optional):</label>
+                                    <div class="dimension-inputs">
+                                        <input type="number" id="resize-width" placeholder="Width (px)" min="10">
+                                        <span><i class="fa-solid fa-xmark"></i></span>
+                                        <input type="number" id="resize-height" placeholder="Height (px)" min="10">
+                                    </div>
+                                    <p class="hint">Leave empty to keep original dimensions.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="action-group">
+                            <button id="convert-btn" class="btn btn-accent btn-large" disabled>
+                                <span class="btn-text">Convert File</span>
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <div class="spinner hidden"></div>
+                            </button>
+                        </div>
+                        
+                        <!-- Progress & Result (Hidden Initially) -->
+                        <div id="result-area" class="result-area hidden">
+                            <div class="result-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">New Size:</span>
+                                    <span id="result-size" class="stat-value">0 KB</span>
+                                </div>
+                                <div class="stat-item savings" id="result-savings-container">
+                                    <span class="stat-label">Saved:</span>
+                                    <span id="result-savings" class="stat-value accent">-0%</span>
+                                </div>
+                            </div>
+                            <button id="download-btn" class="btn btn-success btn-large">
+                                <span class="btn-text">Download</span>
+                                <i class="fa-solid fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <footer class="app-footer">
+            <p>&copy; 2026 FileFlux. Works entirely in your browser. No data is sent to servers.</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
